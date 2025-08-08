@@ -46,7 +46,7 @@ Complexity Combination: Takes the highest complexity found among all patterns
 
 Example Usage:
 Input: Bubble sort algorithm
-
+<details>
 ```javascript
 function bubbleSort(arr) {
     for (let i = 0; i < arr.length; i++) {
@@ -58,7 +58,7 @@ function bubbleSort(arr) {
     }
     return arr;
 }
-
+</details>
 Output:
 
 Complexity: O(n²)
