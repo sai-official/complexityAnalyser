@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Complexity Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+            min-height: 600px;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .language-selector {
+            margin-bottom: 15px;
+        }
+
+        .language-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .language-selector select:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .code-input {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            min-height: 400px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .code-input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .analyze-btn {
+            margin-top: 15px;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .analyze-btn:active {
+            transform: translateY(0);
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .complexity-result {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #28a745;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .complexity-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .explanation {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #17a2b8;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .explanation h3 {
+            color: #17a2b8;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .code-analysis {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .loop-highlight {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .recursive-highlight {
+            background: rgba(220, 53, 69, 0.2);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .examples {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid #6f42c1;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .examples h3 {
+            color: #6f42c1;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .complexity-chart {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .chart-item {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .chart-constant { background: #28a745; }
+        .chart-logarithmic { background: #17a2b8; }
+        .chart-linear { background: #ffc107; color: #333; }
+        .chart-linearithmic { background: #fd7e14; }
+        .chart-quadratic { background: #dc3545; }
+        .chart-exponential { background: #6f42c1; }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Time Complexity Analyzer</h1>
+            <p>Paste your code and get instant time complexity analysis with detailed explanations</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="input-section">
+                <div class="language-selector">
+                    <select id="languageSelect">
+                        <option value="javascript">JavaScript</option>
+                        <option value="python">Python</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                        <option value="c">C</option>
+                        <option value="csharp">C#</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                    </select>
+                </div>
+                
+                <textarea 
+                    id="codeInput" 
+                    class="code-input" 
+                    placeholder="Paste your code here...&#10;&#10;Example:&#10;function bubbleSort(arr) {&#10;    for (let i = 0; i < arr.length; i++) {&#10;        for (let j = 0; j < arr.length - 1; j++) {&#10;            if (arr[j] > arr[j + 1]) {&#10;                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];&#10;            }&#10;        }&#10;    }&#10;    return arr;&#10;}"
+                ></textarea>
+                
+                <button id="analyzeBtn" class="analyze-btn">🔍 Analyze Complexity</button>
+            </div>
+            
+            <div class="results-section" id="resultsSection">
+                <div class="complexity-chart">
+                    <h3>Common Time Complexities</h3>
+                    <div class="chart-item chart-constant">O(1) Constant</div>
+                    <div class="chart-item chart-logarithmic">O(log n) Logarithmic</div>
+                    <div class="chart-item chart-linear">O(n) Linear</div>
+                    <div class="chart-item chart-linearithmic">O(n log n) Linearithmic</div>
+                    <div class="chart-item chart-quadratic">O(n²) Quadratic</div>
+                    <div class="chart-item chart-exponential">O(2ⁿ) Exponential</div>
+                </div>
+                
+                <div class="examples">
+                    <h3>📚 Quick Examples</h3>
+                    <p><strong>O(1):</strong> Array access, hash table lookup</p>
+                    <p><strong>O(log n):</strong> Binary search, balanced tree operations</p>
+                    <p><strong>O(n):</strong> Linear search, single loop</p>
+                    <p><strong>O(n²):</strong> Nested loops, bubble sort</p>
+                    <p><strong>O(2ⁿ):</strong> Recursive fibonacci, subset generation</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TimeComplexityAnalyzer {
+            constructor() {
+                this.patterns = {
+                    loops: {
+                        javascript: [
+                            /for\s*\([^)]*\)\s*\{[^}]*\}/gi,
+                            /while\s*\([^)]*\)\s*\{[^}]*\}/gi,
+                            /\.forEach\s*\([^)]*\)/gi,
+                            /\.map\s*\([^)]*\)/gi,
+                            /\.filter\s*\([^)]*\)/gi,
+                            /\.reduce\s*\([^)]*\)/gi
+                        ],
+                        python: [
+                            /for\s+\w+\s+in\s+[^:]+:/gi,
+                            /while\s+[^:]+:/gi
+                        ],
+                        java: [
+                            /for\s*\([^)]*\)\s*\{[^}]*\}/gi,
+                            /while\s*\([^)]*\)\s*\{[^}]*\}/gi,
+                            /for\s*\([^:]+:[^)]+\)\s*\{[^}]*\}/gi
+                        ],
+                        cpp: [
+                            /for\s*\([^)]*\)\s*\{[^}]*\}/gi,
+                            /while\s*\([^)]*\)\s*\{[^}]*\}/gi
+                        ]
+                    },
+                    recursion: {
+                        javascript: [
+                            /function\s+(\w+)[^{]*\{[^}]*\1\s*\([^)]*\)[^}]*\}/gi,
+                            /const\s+(\w+)\s*=\s*[^=]*=>[^;]*\1\s*\(/gi
+                        ],
+                        python: [
+                            /def\s+(\w+)[^:]*:[^#]*\1\s*\(/gi
+                        ],
+                        java: [
+                            /(public|private|protected)?\s*\w+\s+(\w+)\s*\([^)]*\)\s*\{[^}]*\2\s*\([^)]*\)[^}]*\}/gi
+                        ]
+                    }
+                };
+            }
+
+            analyze(code, language) {
+                const analysis = {
+                    complexity: 'O(1)',
+                    explanation: '',
+                    details: [],
+                    warnings: []
+                };
+
+                // Remove comments and strings for better analysis
+                const cleanCode = this.cleanCode(code, language);
+                
+                // Analyze nested loops
+                const loopComplexity = this.analyzeLoops(cleanCode, language);
+                
+                // Analyze recursion
+                const recursionComplexity = this.analyzeRecursion(cleanCode, language);
+                
+                // Analyze built-in methods
+                const builtinComplexity = this.analyzeBuiltinMethods(cleanCode, language);
+                
+                // Determine overall complexity
+                const complexities = [loopComplexity, recursionComplexity, builtinComplexity];
+                const maxComplexity = this.getMaxComplexity(complexities);
+                
+                analysis.complexity = maxComplexity;
+                analysis.explanation = this.generateExplanation(cleanCode, language, complexities);
+                analysis.details = this.generateDetails(cleanCode, language);
+                
+                return analysis;
+            }
+
+            cleanCode(code, language) {
+                let cleaned = code;
+                
+                // Remove single line comments
+                if (language === 'javascript' || language === 'java' || language === 'cpp' || language === 'csharp') {
+                    cleaned = cleaned.replace(/\/\/.*$/gm, '');
+                    cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, '');
+                } else if (language === 'python') {
+                    cleaned = cleaned.replace(/#.*$/gm, '');
+                }
+                
+                // Remove string literals (simplified)
+                cleaned = cleaned.replace(/"[^"]*"/g, '""');
+                cleaned = cleaned.replace(/'[^']*'/g, "''");
+                
+                return cleaned;
+            }
+
+            analyzeLoops(code, language) {
+                const loopPatterns = this.patterns.loops[language] || this.patterns.loops.javascript;
+                let maxNesting = 0;
+                let currentNesting = 0;
+                
+                // Simple nesting analysis by counting braces/indentation
+                const lines = code.split('\n');
+                let braceCount = 0;
+                let inLoop = false;
+                
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    
+                    // Check if this line starts a loop
+                    const isLoopStart = loopPatterns.some(pattern => {
+                        const match = trimmedLine.match(pattern);
+                        return match && match.index === 0;
+                    });
+                    
+                    if (isLoopStart) {
+                        inLoop = true;
+                        currentNesting++;
+                        maxNesting = Math.max(maxNesting, currentNesting);
+                    }
+                    
+                    // Count braces to track nesting
+                    const openBraces = (trimmedLine.match(/\{/g) || []).length;
+                    const closeBraces = (trimmedLine.match(/\}/g) || []).length;
+                    braceCount += openBraces - closeBraces;
+                    
+                    if (closeBraces > 0 && inLoop && braceCount === 0) {
+                        currentNesting = Math.max(0, currentNesting - closeBraces);
+                    }
+                }
+                
+                // Convert nesting level to complexity
+                if (maxNesting === 0) return 'O(1)';
+                if (maxNesting === 1) return 'O(n)';
+                if (maxNesting === 2) return 'O(n²)';
+                if (maxNesting === 3) return 'O(n³)';
+                return `O(n^${maxNesting})`;
+            }
+
+            analyzeRecursion(code, language) {
+                const recursionPatterns = this.patterns.recursion[language] || this.patterns.recursion.javascript;
+                
+                for (const pattern of recursionPatterns) {
+                    const matches = code.match(pattern);
+                    if (matches) {
+                        // Check for multiple recursive calls (like fibonacci)
+                        const functionName = matches[1] || 'function';
+                        const recursiveCalls = (code.match(new RegExp(functionName + '\\s*\\(', 'gi')) || []).length - 1;
+                        
+                        if (recursiveCalls > 1) {
+                            return 'O(2ⁿ)';
+                        } else if (recursiveCalls === 1) {
+                            // Check if it's tail recursion or divide-and-conquer
+                            if (code.includes('length / 2') || code.includes('length >> 1')) {
+                                return 'O(log n)';
+                            }
+                            return 'O(n)';
+                        }
+                    }
+                }
+                
+                return 'O(1)';
+            }
+
+            analyzeBuiltinMethods(code, language) {
+                let complexity = 'O(1)';
+                
+                if (language === 'javascript') {
+                    if (code.includes('.sort(')) complexity = 'O(n log n)';
+                    if (code.includes('.indexOf(') || code.includes('.includes(')) complexity = 'O(n)';
+                    if (code.includes('.reverse(')) complexity = 'O(n)';
+                } else if (language === 'python') {
+                    if (code.includes('.sort(') || code.includes('sorted(')) complexity = 'O(n log n)';
+                    if (code.includes(' in ') && !code.includes('for ')) complexity = 'O(n)';
+                    if (code.includes('.reverse()')) complexity = 'O(n)';
+                }
+                
+                return complexity;
+            }
+
+            getMaxComplexity(complexities) {
+                const complexityOrder = {
+                    'O(1)': 0,
+                    'O(log n)': 1,
+                    'O(n)': 2,
+                    'O(n log n)': 3,
+                    'O(n²)': 4,
+                    'O(n³)': 5,
+                    'O(2ⁿ)': 6,
+                    'O(n!)': 7
+                };
+                
+                let maxComplexity = 'O(1)';
+                let maxOrder = 0;
+                
+                for (const complexity of complexities) {
+                    const order = complexityOrder[complexity] || 0;
+                    if (order > maxOrder) {
+                        maxOrder = order;
+                        maxComplexity = complexity;
+                    }
+                }
+                
+                return maxComplexity;
+            }
+
+            generateExplanation(code, language, complexities) {
+                const [loopComplexity, recursionComplexity, builtinComplexity] = complexities;
+                let explanation = '';
+                
+                if (loopComplexity !== 'O(1)') {
+                    const nestingLevel = loopComplexity.includes('²') ? 2 : 
+                                       loopComplexity.includes('³') ? 3 : 1;
+                    
+                    if (nestingLevel === 1) {
+                        explanation += '🔄 **Single Loop Detected**: Your code contains a single loop that iterates through the input, resulting in linear time complexity O(n).\n\n';
+                    } else if (nestingLevel === 2) {
+                        explanation += '🔄🔄 **Nested Loops Detected**: Your code contains nested loops, where for each element in the outer loop, the inner loop runs completely, resulting in quadratic time complexity O(n²).\n\n';
+                    } else {
+                        explanation += `🔄 **Multiple Nested Loops**: Your code has ${nestingLevel} levels of nesting, resulting in O(n^${nestingLevel}) complexity.\n\n`;
+                    }
+                }
+                
+                if (recursionComplexity !== 'O(1)') {
+                    if (recursionComplexity === 'O(2ⁿ)') {
+                        explanation += '🌳 **Exponential Recursion**: Multiple recursive calls in each function call (like Fibonacci) lead to exponential time complexity O(2ⁿ).\n\n';
+                    } else if (recursionComplexity === 'O(log n)') {
+                        explanation += '🔍 **Divide and Conquer**: The recursive function divides the problem in half each time, resulting in logarithmic complexity O(log n).\n\n';
+                    } else {
+                        explanation += '🔄 **Linear Recursion**: Single recursive call per function execution results in linear time complexity O(n).\n\n';
+                    }
+                }
+                
+                if (builtinComplexity !== 'O(1)') {
+                    explanation += `⚙️ **Built-in Methods**: The code uses built-in methods with ${builtinComplexity} complexity.\n\n`;
+                }
+                
+                if (explanation === '') {
+                    explanation = '✅ **Constant Time**: Your code runs in constant time O(1), meaning it executes in the same amount of time regardless of input size.';
+                }
+                
+                return explanation;
+            }
+
+            generateDetails(code, language) {
+                const details = [];
+                
+                // Analyze specific patterns
+                if (code.includes('for') || code.includes('while')) {
+                    details.push({
+                        type: 'Loop Analysis',
+                        description: 'Found iterative constructs that scale with input size',
+                        impact: 'Each loop adds a factor of n to the complexity'
+                    });
+                }
+                
+                if (code.match(/function\s+\w+.*\{.*\w+\s*\(.*\)/s)) {
+                    details.push({
+                        type: 'Recursion Analysis',
+                        description: 'Detected recursive function calls',
+                        impact: 'Recursion depth affects time complexity'
+                    });
+                }
+                
+                return details;
+            }
+        }
+
+        // Initialize the analyzer
+        const analyzer = new TimeComplexityAnalyzer();
+        
+        document.getElementById('analyzeBtn').addEventListener('click', () => {
+            const code = document.getElementById('codeInput').value;
+            const language = document.getElementById('languageSelect').value;
+            
+            if (!code.trim()) {
+                alert('Please enter some code to analyze!');
+                return;
+            }
+            
+            const analysis = analyzer.analyze(code, language);
+            displayResults(analysis, code);
+        });
+        
+        function displayResults(analysis, originalCode) {
+            const resultsSection = document.getElementById('resultsSection');
+            
+            resultsSection.innerHTML = `
+                <div class="complexity-result">
+                    <div class="complexity-badge">${analysis.complexity}</div>
+                    <h3>Time Complexity Result</h3>
+                    <p>Your code has <strong>${analysis.complexity}</strong> time complexity.</p>
+                </div>
+                
+                <div class="explanation">
+                    <h3>🧐 Detailed Explanation</h3>
+                    <div>${analysis.explanation.replace(/\n\n/g, '<br><br>')}</div>
+                </div>
+                
+                <div class="explanation">
+                    <h3>📊 Performance Impact</h3>
+                    <p>${getPerformanceImpact(analysis.complexity)}</p>
+                    
+                    <div class="code-analysis">
+                        <strong>Input Size vs Operations:</strong><br>
+                        ${getComplexityExamples(analysis.complexity)}
+                    </div>
+                </div>
+                
+                <div class="explanation">
+                    <h3>💡 Optimization Tips</h3>
+                    <div>${getOptimizationTips(analysis.complexity)}</div>
+                </div>
+                
+                ${analysis.warnings.length > 0 ? `
+                    <div class="warning">
+                        <strong>⚠️ Warnings:</strong><br>
+                        ${analysis.warnings.join('<br>')}
+                    </div>
+                ` : ''}
+            `;
+        }
+        
+        function getPerformanceImpact(complexity) {
+            const impacts = {
+                'O(1)': 'Excellent! Constant time - performance doesn\'t degrade with larger inputs.',
+                'O(log n)': 'Very good! Logarithmic time - performance scales very well even with large inputs.',
+                'O(n)': 'Good! Linear time - performance scales proportionally with input size.',
+                'O(n log n)': 'Acceptable! Linearithmic time - common in efficient sorting algorithms.',
+                'O(n²)': 'Concerning! Quadratic time - performance degrades quickly with large inputs.',
+                'O(n³)': 'Poor! Cubic time - avoid for large datasets.',
+                'O(2ⁿ)': 'Very poor! Exponential time - only feasible for very small inputs.'
+            };
+            
+            return impacts[complexity] || 'Complex time behavior detected.';
+        }
+        
+        function getComplexityExamples(complexity) {
+            const examples = {
+                'O(1)': 'n=100 → 1 ops, n=1000 → 1 ops, n=10000 → 1 ops',
+                'O(log n)': 'n=100 → 7 ops, n=1000 → 10 ops, n=10000 → 13 ops',
+                'O(n)': 'n=100 → 100 ops, n=1000 → 1000 ops, n=10000 → 10000 ops',
+                'O(n log n)': 'n=100 → 700 ops, n=1000 → 10000 ops, n=10000 → 130000 ops',
+                'O(n²)': 'n=100 → 10000 ops, n=1000 → 1M ops, n=10000 → 100M ops',
+                'O(n³)': 'n=100 → 1M ops, n=1000 → 1B ops, n=10000 → 1T ops',
+                'O(2ⁿ)': 'n=10 → 1024 ops, n=20 → 1M ops, n=30 → 1B ops'
+            };
+            
+            return examples[complexity] || 'Variable scaling based on algorithm structure';
+        }
+        
+        function getOptimizationTips(complexity) {
+            const tips = {
+                'O(1)': '✅ Your code is already optimized! Consider this the gold standard.',
+                'O(log n)': '✅ Great performance! This is often the best achievable for search operations.',
+                'O(n)': '💡 Consider: Can you use hash tables for lookups? Can you eliminate unnecessary passes?',
+                'O(n log n)': '💡 This is optimal for comparison-based sorting. For other operations, consider hash tables or different algorithms.',
+                'O(n²)': '⚠️ Consider: Hash tables for lookups, sorting + two pointers, or divide-and-conquer approaches.',
+                'O(n³)': '❌ Strongly consider algorithm redesign. Look for dynamic programming, memoization, or different approaches.',
+                'O(2ⁿ)': '❌ Use memoization, dynamic programming, or iterative solutions. This is often a sign of repeated subproblem solving.'
+            };
+            
+            return tips[complexity] || 'Consider algorithmic improvements and optimizations.';
+        }
+        
+        // Add sample code examples
+        const sampleCodes = {
+            javascript: {
+                'O(1)': `// Constant time - array access
+function getFirst(arr) {
+    return arr[0];
+}`,
+                'O(n)': `// Linear time - single loop
+function findMax(arr) {
+    let max = arr[0];
+    for (let i = 1; i < arr.length; i++) {
+        if (arr[i] > max) max = arr[i];
+    }
+    return max;
+}`,
+                'O(n²)': `// Quadratic time - nested loops
+function bubbleSort(arr) {
+    for (let i = 0; i < arr.length; i++) {
+        for (let j = 0; j < arr.length - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+            }
+        }
+    }
+    return arr;
+}`
+            }
+        };
+        
+        // Add sample code loading
+        document.addEventListener('DOMContentLoaded', () => {
+            const codeInput = document.getElementById('codeInput');
+            codeInput.value = sampleCodes.javascript['O(n²)'];
+        });
+    </script>
+</body>
+</html>
